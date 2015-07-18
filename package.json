@@ -23,7 +23,7 @@
     "url": "https://github.com/maboiteaspam/showusage/issues"
   },
   "dependencies": {
-    "md-stream-utils": "maboiteaspam/md-stream-utils",
+    "md-stream-utils": "0.0.3",
     "npm": "^2.13.1",
     "resumer": "0.0.0"
   },
