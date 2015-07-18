@@ -1,6 +1,6 @@
 {
   "name": "showusage",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Show `Usage` section of a globally installed node module `README` file.",
   "main": "index.js",
   "scripts": {},
