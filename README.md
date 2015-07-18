@@ -1,19 +1,20 @@
 # showusage
-to write
+
+Show `Usage` section of a globally installed node module `README` file.
 
 ## Installation
 Run the following commands to download and install the application:
 
 ```sh
-$  clone https://github.com/maboiteaspam/showusage showusage
-$ cd showusage
-$ npm install
+npm i showusage -g
 ```
 
-## Documentation
+## Usage
 
+**`showusage <NPM module> <README section>`**
 
-
+* `NPM module` is the name of the module `README` file to inspect.
+* `README section` is the name/regexp of the section `heading` to extract.
 
 ## How to contribute
 

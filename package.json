@@ -4,11 +4,14 @@
   "description": "to write",
   "main": "index.js",
   "scripts": {},
-  "bin": {},
+  "bin": {
+    "showusage": "./index.js"
+  },
   "keywords": [
-    "To",
-    "be",
-    "done"
+    "cli",
+    "readme",
+    "usage",
+    "markdown"
   ],
   "author": "maboiteaspam",
   "license": "WTF",
@@ -20,7 +23,9 @@
     "url": "https://github.com/maboiteaspam/showusage/issues"
   },
   "dependencies": {
-    "commander": "^2.8.1"
+    "md-stream-utils": "maboiteaspam/md-stream-utils",
+    "npm": "^2.13.1",
+    "resumer": "0.0.0"
   },
   "devDependencies": {
     "should": "^7.0.2"
