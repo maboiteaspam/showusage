@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 
 var pkgToRead = process.argv[2] || 'showusage'
 var section = new RegExp(process.argv[3]) || 'usage'
