@@ -1,3 +1,9 @@
+:package: patch v0.0.6
+
+```
+Fix `section` parameter, previsouly it was ignored.
+```
+
 :package: patch v0.0.5
 
 ```
