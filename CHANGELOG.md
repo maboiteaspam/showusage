@@ -1,3 +1,12 @@
+:package: patch v0.0.5
+
+```
+It is now compatible with windows
+
+It is now using npm bin rather than it s node API
+Adds dependency to byline to split stdout
+```
+
 :package: patch v0.0.4
 
 * [[a9ec336ecd](https://github.com/maboiteaspam/showusage/commit/a9ec336ecd) - Fix package dependency to avoid rely on git (clement) 
