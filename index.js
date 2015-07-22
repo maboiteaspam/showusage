@@ -8,7 +8,7 @@ var resumer = require('resumer')
 var spawn = require('child_process').spawn
 
 var pkgToRead = process.argv[2] || 'showusage'
-var section = new RegExp(process.argv[3]) || 'usage'
+var section = process.argv[3] || '\\s+Usage'
 
 var npmHasFound = false
 var npmError = false
@@ -53,7 +53,7 @@ npm.on('close', function(){
       .queue(data.readme)
       .pipe(mdUtils.tokenizer())
       .pipe(mdUtils.byParapgraph())
-      .pipe(mdUtils.filter({content: /\s+Usage/}))
+      .pipe(mdUtils.filter({content: new RegExp(section)}))
       .pipe(mdUtils.cliColorize())
       .pipe(mdUtils.toString())
       .pipe(process.stdout)
