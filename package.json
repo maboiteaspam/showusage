@@ -24,9 +24,11 @@
   },
   "dependencies": {
     "byline": "^4.2.1",
+    "glob": "^5.0.14",
     "md-stream-utils": "0.0.3",
     "npm": "^2.13.1",
-    "resumer": "0.0.0"
+    "resumer": "0.0.0",
+    "through2": "^2.0.0"
   },
   "devDependencies": {
     "should": "^7.0.2"

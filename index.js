@@ -2,60 +2,73 @@
 
 var path = require('path')
 var fs = require('fs')
+var through2 = require('through2')
+var glob = require('glob')
 var byline = require('byline')
 var mdUtils = require('md-stream-utils')
 var resumer = require('resumer')
-var spawn = require('child_process').spawn
+var exec = require('child_process').exec
 
 var pkgToRead = process.argv[2] || 'showusage'
 var section = process.argv[3] || '\\s+Usage'
+var global = !fs.existsSync(path.join('.', 'node_modules', pkgToRead))
 
-var npmHasFound = false
-var npmError = false
-var npmLineIndex = 0
-var npmPkgHome = false
+if (global) {
+  npmPkgDir(pkgToRead, function(err, npmPkgHome){
+    if (err) return console.error(err)
+    showREADMESection (npmPkgHome, pkgToRead, section)
+  })
+} else {
+  showREADMESection (process.cwd(), pkgToRead, section)
+}
 
-var npm = spawn('npm', ['ls', pkgToRead, '-g', '--depth=1'])
+function showREADMESection (npmPkgHome, pkgToRead, section) {
 
-npm.on('error', function(e){
-  npmError = e
-})
-
-byline(npm.stdout).on('data', function(d){
-  d = ''+d
-  if( npmLineIndex === 0 ){
-    npmPkgHome = d
-  } else if (d.match(/\(empty\)/)) {
-    npmHasFound = false
-  } else {
-    npmHasFound = true
-  }
-  npmLineIndex++;
-})
-
-npm.on('close', function(){
-  if (npmError) {
-    console.error('NPM got error')
-    console.error(npmError)
-  }
-  if (!npmHasFound) {
-    return console.error('There is no such package: '+pkgToRead)
-  }
-  if (fs.existsSync(npmPkgHome) === false) {
-    return console.error('There is no such directory: '+npmPkgHome)
-  }
+  var READMEContent
   var data = require( path.join(npmPkgHome, 'node_modules', pkgToRead, 'package.json'))
-  if (!data.readme) {
-    console.error('There is no README in this package')
-
+  if (!data.readme || data.readme==='ERROR: No README data found!') {
+    var basePath = path.join(npmPkgHome, 'node_modules', pkgToRead)
+    var READMEfile = glob.sync('README**', {nodir: true, nocase: true, cwd: basePath})
+    if (!READMEfile.length || !fs.existsSync(path.join(basePath, READMEfile[0]))) {
+      return console.log('There is no README in this package')
+    }
+    READMEContent = fs.readFileSync(path.join(basePath, READMEfile[0]))
   } else {
-    resumer()
-      .queue(data.readme)
-      .pipe(mdUtils.tokenizer())
-      .pipe(mdUtils.byParapgraph())
-      .pipe(mdUtils.filter({content: new RegExp(section)}))
-      .pipe(mdUtils.cliColorize())
-      .pipe(mdUtils.toString())
-      .pipe(process.stdout)
+    READMEContent = data.readme
   }
-})
+
+  var found = false
+
+  resumer()
+    .queue(READMEContent)
+    .pipe(mdUtils.tokenizer())
+    .pipe(mdUtils.byParapgraph())
+    .pipe(mdUtils.filter({content: new RegExp(section)}))
+    .pipe(mdUtils.cliColorize())
+    .pipe(mdUtils.toString())
+    .pipe(through2(function (chunk, enc, callback) {
+      found = true
+      this.push(chunk)
+      callback()
+    }))
+    .pipe(process.stdout)
+
+  process.on('beforeExit', function() {
+    if (!found) console.error('This README does not have such section ' + section)
+  });
+}
+
+function npmPkgDir (pkgToRead, then) {
+  exec('npm ls ' + pkgToRead + ' -g --depth=1', function (err, stdout) {
+    if (err) {
+      return then(err)
+    }
+
+    var npmPkgHome = stdout.split('\n')[0]
+    if (!fs.existsSync(npmPkgHome)) {
+      return then('There is no such directory: '+npmPkgHome)
+    }
+
+    then(null, npmPkgHome)
+  })
+}
