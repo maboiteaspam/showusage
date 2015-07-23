@@ -1,3 +1,12 @@
+:package: patch v0.0.7
+
+```
+Fix #1: It should work on windows by now
+Add a global auto switch,
+if package does not exists in local, go for global
+Improved error reporting.
+```
+
 :package: patch v0.0.6
 
 ```
