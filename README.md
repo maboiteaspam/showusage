@@ -1,6 +1,6 @@
 # showusage
 
-Show `Usage` section of a globally installed node module `README` file.
+Show pretty printed `Usage` section of a globally installed node module `README` file.
 
 ## Installation
 Run the following commands to download and install the application:
