@@ -2,6 +2,10 @@
 
 Show pretty printed `Usage` section of a node package.
 
+If the `README` file does not contain such section,
+ the program suggest a list of alternative readings.
+
+
 ## Installation
 Run the following commands to download and install the application:
 
