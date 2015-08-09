@@ -1,6 +1,6 @@
 # showusage
 
-Show pretty printed `Usage` section of a globally installed node module `README` file.
+Show pretty printed `Usage` section of a node package.
 
 ## Installation
 Run the following commands to download and install the application:
@@ -13,8 +13,8 @@ npm i showusage -g
 
 **`showusage <NPM module> <README section>`**
 
-* `NPM module` is the name of the module `README` file to inspect.
-* `README section` is the name/regexp of the section `heading` to extract.
+* `NPM module` is the `name`, or `path` of the module within `local` or `global` to read.
+* `README section` is the `name` or a `regexp` of the section's `heading` to extract.
 
 ## How to contribute
 

@@ -11,7 +11,8 @@ var exec = require('child_process').exec
 
 var pkgToRead = process.argv[2] || 'showusage'
 var section = process.argv[3] || '\\s+Usage'
-var global = !fs.existsSync(path.join('.', 'node_modules', pkgToRead))
+var global = !fs.existsSync(path.join(pkgToRead, 'package.json'))
+  && !fs.existsSync(path.join('.', 'node_modules', pkgToRead))
 
 if (global) {
   npmPkgDir(pkgToRead, function(err, npmPkgHome){
@@ -24,10 +25,23 @@ if (global) {
 
 function showREADMESection (npmPkgHome, pkgToRead, section) {
 
+  var data = {readme: ''}
+  var basePath = ''
+  if (fs.existsSync(path.join(npmPkgHome, 'node_modules', pkgToRead, 'package.json'))){
+    data = require(path.join(npmPkgHome, 'node_modules', pkgToRead, 'package.json'))
+    basePath = path.join(npmPkgHome, 'node_modules', pkgToRead)
+
+  }else if (fs.existsSync(pkgToRead, 'package.json')){
+    data = require(path.join(pkgToRead, 'package.json'))
+    basePath = path.join(pkgToRead)
+
+  }else{
+    throw 'package not found'
+  }
+
   var READMEContent
-  var data = require( path.join(npmPkgHome, 'node_modules', pkgToRead, 'package.json'))
+
   if (!data.readme || data.readme==='ERROR: No README data found!') {
-    var basePath = path.join(npmPkgHome, 'node_modules', pkgToRead)
     var READMEfile = glob.sync('README**', {nodir: true, nocase: true, cwd: basePath})
     if (!READMEfile.length || !fs.existsSync(path.join(basePath, READMEfile[0]))) {
       return console.log('There is no README in this package')
