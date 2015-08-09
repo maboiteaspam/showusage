@@ -73,7 +73,7 @@ function showREADMESection (npmPkgHome, pkgToRead, section) {
 }
 
 function npmPkgDir (pkgToRead, then) {
-  exec('npm ls ' + pkgToRead + ' -g --depth=1', function (err, stdout) {
+  exec('npm ls ' + pkgToRead + ' -g --depth=0', function (err, stdout) {
     if (err) {
       return then(err)
     }
