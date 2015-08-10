@@ -1,3 +1,9 @@
+:package: patch v0.0.9
+
+```
+Fix for windows users.
+```
+
 :package: patch v0.0.8
 
 ```
