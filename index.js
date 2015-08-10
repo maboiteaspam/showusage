@@ -81,7 +81,8 @@ function findPackagePath (npmPkgHome, pkgToRead) {
 function getREADMEContent (npmPkgPath) {
 
   var READMEContent = false
-  var packagePath = path.join(npmPkgPath, 'package.json')
+  var packagePath = path.join(npmPkgPath, 'package.json');
+  (npmPkgPath==='.') && (packagePath = './package.json')
   var data = require(packagePath) || {readme: ''}
 
   if (!data.readme || data.readme==='ERROR: No README data found!') {
@@ -150,7 +151,9 @@ function getOneParagrah(READMEContent, section, then){
       })
     })())
   tokenized.pause()
-  stream.write(READMEContent)
+  process.nextTick(function () {
+    stream.write(READMEContent)
+  })
   return tokenized
 }
 
@@ -183,7 +186,9 @@ function getAllHeadings(READMEContent, then){
       if (then) then(headings)
       callback()
     })).pause();
-  stream.write(READMEContent)
+  process.nextTick(function () {
+    stream.write(READMEContent)
+  })
   return tokenized
 }
 
