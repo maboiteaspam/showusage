@@ -1,3 +1,9 @@
+:package: minor v0.1.0
+
+```
+Improved markdown parser engine.
+```
+
 :package: patch v0.0.9
 
 ```
