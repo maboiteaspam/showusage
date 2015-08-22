@@ -75,11 +75,11 @@ function findPackagePath (npmPkgHome, pkgToRead) {
   if (fs.existsSync(path.join(npmPkgHome, 'node_modules', pkgToRead, 'package.json'))){
     basePath = path.join(npmPkgHome, 'node_modules', pkgToRead)
 
-  }else if (fs.existsSync(pkgToRead, 'package.json')){
-    basePath = path.join(pkgToRead)
+  }else if (fs.existsSync(npmPkgHome, 'package.json')){
+    basePath = path.join(npmPkgHome)
 
   }else{
-    throw 'package not found'
+    throw 'package not found in ' + npmPkgHome
   }
 
   return basePath
