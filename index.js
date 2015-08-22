@@ -9,19 +9,6 @@ var mds = require('md-stream-utils')
 var inquirer = require("inquirer");
 var exec = require('child_process').exec
 
-var pkgToRead = process.argv[2] || 'showusage'
-var sectionToFind = process.argv[3] || '\\s+Usage'
-var global = !fs.existsSync(path.join(pkgToRead, 'package.json'))
-  && !fs.existsSync(path.join('.', 'node_modules', pkgToRead, 'package.json'))
-if (global) {
-  npmPkgDir(pkgToRead, function(err, npmPkgHome){
-    if (err) return console.error('This package \'' + pkgToRead + '\' is not found.')
-    showREADMESection (npmPkgHome, pkgToRead, sectionToFind)
-  })
-} else {
-  showREADMESection (process.cwd(), pkgToRead, sectionToFind)
-}
-
 function showREADMESection (npmPkgHome, pkgToRead, sectionToFind) {
 
   var pkgPath = findPackagePath(npmPkgHome, pkgToRead)
@@ -36,53 +23,50 @@ function showREADMESection (npmPkgHome, pkgToRead, sectionToFind) {
   process.stdin.resume();
 
   getParsedContent(READMEContent, function(err, parsed){
-    var stream = getOneParagrah(parsed, sectionToFind);
-    stream.on('notfound', function(err){
-      getAllHeadings(parsed, function (headings) {
-        var suggestions = ['All the content']
-        headings.forEach(function (head) {
-          suggestions.push(head)
-        })
-        suggestions.push(new inquirer.Separator())
-        var message = ''
-          + err + '\n'
-          + 'Would you like to read an alternative section ?' + ''
-        suggestAlternativeReadings(message, suggestions, function (answer) {
-          var pumpable = new mds.PausableStream();
-          pumpable.pause();
-          if (answer.match(/^All the content$/)) {
-            var stream = through2.obj();
-            stream
-              .pipe(pumpable.stream)
-              .pipe(mds.format())
-              .pipe(mds.colorize())
-              .pipe(mds.less(pumpable))
-              .pipe(mds.flattenToString(mds.resolveColors.transform))
-              .pipe(process.stdout);
-            stream.write(parsed)
-          } else {
-            getOneParagrah(parsed, answer)
-              .pipe(pumpable.stream)
-              .pipe(mds.format())
-              .pipe(mds.colorize())
-              .pipe(mds.less(pumpable))
-              .pipe(mds.flattenToString(mds.resolveColors.transform))
-              .pipe(process.stdout)
-          }
-        })
-      });
-    })
-    var pumpable = new mds.PausableStream();
-    pumpable.pause();
-    stream
-      .pipe(pumpable.stream)
-      .pipe(mds.format())
-      .pipe(mds.colorize())
-      .pipe(mds.less(pumpable))
-      .pipe(mds.flattenToString(mds.resolveColors.transform))
-      .pipe(process.stdout);
+    if (sectionToFind===false) {
+      showContent().write(parsed)
+    } else {
+      var stream = getOneParagrah(parsed, sectionToFind);
+      stream.on('notfound', function(err){
+        getAllHeadings(parsed, function (headings) {
+          var suggestions = ['All the content']
+          headings.forEach(function (head) {
+            suggestions.push(head)
+          })
+          suggestions.push(new inquirer.Separator())
+          var message = ''
+            + err + '\n'
+            + 'Would you like to read an alternative section ?' + ''
+          suggestAlternativeReadings(message, suggestions, function (answer) {
+            var pumpable = new mds.PausableStream();
+            pumpable.pause();
+            if (answer.match(/^All the content$/)) {
+              showContent().write(parsed)
+            } else {
+              getOneParagrah(parsed, answer)
+                .pipe(showContent())
+            }
+          })
+        });
+      })
+      stream.pipe(showContent())
+    }
   }).resume()
 
+}
+
+function showContent () {
+  var stream = through2.obj()
+  var pumpable = new mds.PausableStream();
+  pumpable.pause();
+  stream
+    .pipe(pumpable.stream)
+    .pipe(mds.format())
+    .pipe(mds.colorize())
+    .pipe(mds.less(pumpable))
+    .pipe(mds.flattenToString(mds.resolveColors.transform))
+    .pipe(process.stdout);
+  return stream
 }
 
 function findPackagePath (npmPkgHome, pkgToRead) {
@@ -121,21 +105,6 @@ function getREADMEContent (npmPkgPath) {
   }
 
   return READMEContent
-}
-
-function npmPkgDir (pkgToRead, then) {
-  exec('npm ls ' + pkgToRead + ' -g --depth=0', function (err, stdout) {
-    if (err) {
-      return then(err)
-    }
-
-    var npmPkgHome = stdout.split('\n')[0]
-    if (!fs.existsSync(npmPkgHome)) {
-      return then('There is no such directory: '+npmPkgHome)
-    }
-
-    then(null, npmPkgHome)
-  })
 }
 
 function toCharacter () {
@@ -236,3 +205,5 @@ function suggestAlternativeReadings(message, suggestions, then){
     then(answers.suggested)
   });
 }
+
+module.exports = showREADMESection
