@@ -13,13 +13,14 @@ var pkgToRead = process.argv[2] || 'showusage'
 var sectionToFind = process.argv[3] || '\\s+Usage'
 var global = !fs.existsSync(path.join(pkgToRead, 'package.json'))
   && !fs.existsSync(path.join('.', 'node_modules', pkgToRead, 'package.json'))
-process.stdin.resume()
 if (global) {
   npmPkgDir(pkgToRead, function(err, npmPkgHome){
     if (err) return console.error('This package \'' + pkgToRead + '\' is not found.')
+    process.stdin.resume()
     showREADMESection (npmPkgHome, pkgToRead, sectionToFind)
   })
 } else {
+  process.stdin.resume()
   showREADMESection (process.cwd(), pkgToRead, sectionToFind)
 }
 
@@ -48,11 +49,19 @@ function showREADMESection (npmPkgHome, pkgToRead, sectionToFind) {
           + 'Would you like to read an alternative section ?' + ''
         suggestAlternativeReadings(message, suggestions, function (answer) {
           if (answer.match(/^All the content$/)) {
-            interactiveMD(parsed)
+            var stream = through2.obj()
+            stream
+              .pipe(mds.format())
+              .pipe(mds.colorize())
+              .pipe(interactiveStream())
+              .pipe(mds.flattenToString(mds.resolveColors.transform))
+              .pipe(process.stdout);
+            stream.write(parsed)
           } else {
             getOneParagrah(parsed, answer)
               .pipe(mds.format())
               .pipe(mds.colorize())
+              .pipe(interactiveStream())
               .pipe(mds.flattenToString(mds.resolveColors.transform))
               .pipe(process.stdout)
           }
@@ -62,6 +71,7 @@ function showREADMESection (npmPkgHome, pkgToRead, sectionToFind) {
     stream
       .pipe(mds.format())
       .pipe(mds.colorize())
+      .pipe(interactiveStream())
       .pipe(mds.flattenToString(mds.resolveColors.transform))
       .pipe(process.stdout);
   }).resume()
@@ -89,7 +99,7 @@ function getREADMEContent (npmPkgPath) {
   var READMEContent = false
   var packagePath = path.join(npmPkgPath, 'package.json');
   (npmPkgPath==='.') && (packagePath = './package.json')
-  var data = require(packagePath) || {readme: ''}
+  var data = JSON.parse(fs.readFileSync(packagePath)) || {readme: ''}
 
   if (!data.readme || data.readme==='ERROR: No README data found!') {
     var READMEfile = glob.sync('README**', {nodir: true, nocase: true, cwd: npmPkgPath})
@@ -209,22 +219,13 @@ function getParsedContent(READMEContent, then){
   return tokenized
 }
 
-function interactiveMD(parsed){
+function interactiveStream(){
   var stream = through2.obj()
-  process.nextTick(function(){
-    stream.write(parsed);
-    stream.end()
-  })
   var pumpable = new mds.PausableStream()
   pumpable.pause()
   return stream
-    .pipe(mds.byLine())
     .pipe(pumpable.stream)
-    .pipe(mds.format())
-    .pipe(mds.colorize())
-    .pipe(mds.less(pumpable))
-    .pipe(mds.flattenToString(mds.resolveColors.transform))
-    .pipe(process.stdout);
+    .pipe(mds.less(pumpable));
 }
 
 function suggestAlternativeReadings(message, suggestions, then){
