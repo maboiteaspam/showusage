@@ -16,11 +16,9 @@ var global = !fs.existsSync(path.join(pkgToRead, 'package.json'))
 if (global) {
   npmPkgDir(pkgToRead, function(err, npmPkgHome){
     if (err) return console.error('This package \'' + pkgToRead + '\' is not found.')
-    process.stdin.resume()
     showREADMESection (npmPkgHome, pkgToRead, sectionToFind)
   })
 } else {
-  process.stdin.resume()
   showREADMESection (process.cwd(), pkgToRead, sectionToFind)
 }
 
@@ -35,6 +33,8 @@ function showREADMESection (npmPkgHome, pkgToRead, sectionToFind) {
     return console.error('Can\'t find README file for \''+pkgToRead+'\'')
   }
 
+  process.stdin.resume();
+
   getParsedContent(READMEContent, function(err, parsed){
     var stream = getOneParagrah(parsed, sectionToFind);
     stream.on('notfound', function(err){
@@ -48,30 +48,37 @@ function showREADMESection (npmPkgHome, pkgToRead, sectionToFind) {
           + err + '\n'
           + 'Would you like to read an alternative section ?' + ''
         suggestAlternativeReadings(message, suggestions, function (answer) {
+          var pumpable = new mds.PausableStream();
+          pumpable.pause();
           if (answer.match(/^All the content$/)) {
-            var stream = through2.obj()
+            var stream = through2.obj();
             stream
+              .pipe(pumpable.stream)
               .pipe(mds.format())
               .pipe(mds.colorize())
-              .pipe(interactiveStream())
+              .pipe(mds.less(pumpable))
               .pipe(mds.flattenToString(mds.resolveColors.transform))
               .pipe(process.stdout);
             stream.write(parsed)
           } else {
             getOneParagrah(parsed, answer)
+              .pipe(pumpable.stream)
               .pipe(mds.format())
               .pipe(mds.colorize())
-              .pipe(interactiveStream())
+              .pipe(mds.less(pumpable))
               .pipe(mds.flattenToString(mds.resolveColors.transform))
               .pipe(process.stdout)
           }
         })
       });
     })
+    var pumpable = new mds.PausableStream();
+    pumpable.pause();
     stream
+      .pipe(pumpable.stream)
       .pipe(mds.format())
       .pipe(mds.colorize())
-      .pipe(interactiveStream())
+      .pipe(mds.less(pumpable))
       .pipe(mds.flattenToString(mds.resolveColors.transform))
       .pipe(process.stdout);
   }).resume()
@@ -217,15 +224,6 @@ function getParsedContent(READMEContent, then){
     stream.write(READMEContent)
   })
   return tokenized
-}
-
-function interactiveStream(){
-  var stream = through2.obj()
-  var pumpable = new mds.PausableStream()
-  pumpable.pause()
-  return stream
-    .pipe(pumpable.stream)
-    .pipe(mds.less(pumpable));
 }
 
 function suggestAlternativeReadings(message, suggestions, then){
